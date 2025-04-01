@@ -4,26 +4,28 @@ import pandas as pd
 from matplotlib.figure import Figure as fig
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as figCanvas
 
-import main as lclMain
 
-dados = pd.read_excel(lclMain.filePath, engine='openpyxl')
-dados.columns = ['data', 'mm']
-dados['data'] = pd.to_datetime(dados['data'])
-dados['dias'] = (dados['data'] - dados['data'].min()).dt.days
+# dados = pd.read_excel(filePath, engine='openpyxl')
+# dados.columns = ['data', 'mm']
+# dados['data'] = pd.to_datetime(dados['data'])
+# dados['dias'] = (dados['data'] - dados['data'].min()).dt.days
 
-def filtrarDados(tipo):
-    if tipo == 'sem':
-        dadosFiltrados = dados
-    elif tipo == 'mm':
-        if lclMain.checkMaior.get() == 1 and lclMain.checkMenor.get() == 1:
-            dadosFiltrados = dados[dados['mm'] > lclMain.entryFiltrosMmMaior.get()]
-            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < lclMain.entryFiltrosMmMenor.get()]
-        elif lclMain.checkMaior.get() == 1:
-            dadosFiltrados = dados[dados['mm'] > lclMain.entryFiltrosMmMaior.get()]
-        else:
-            dadosFiltrados = dados[dados['mm'] < lclMain.entryFiltrosMmMenor.get()]
+# def filtrarDados(tipo, filePath):
+#     dados = pd.read_excel(filePath, engine='openpyxl')
 
-    resultado = mk.original_test(dadosFiltrados['mm'])
+#     if tipo == 'sem':
+#         dadosFiltrados = dados
+#     elif tipo == 'mm':
+#         if checkMaior.get() == 1 and checkMenor.get() == 1:
+#             dadosFiltrados = dados[dados['mm'] > entryFiltrosMmMaior.get()]
+#             dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < entryFiltrosMmMenor.get()]
+#         elif checkMaior.get() == 1:
+#             dadosFiltrados = dados[dados['mm'] > entryFiltrosMmMaior.get()]
+#         else:
+#             dadosFiltrados = dados[dados['mm'] < entryFiltrosMmMenor.get()]
+
+#     resultado = mk.original_test(dadosFiltrados['mm'])
+#     return resultado
     
         
 

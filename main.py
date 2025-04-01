@@ -5,9 +5,29 @@ import pandas as pd
 from matplotlib.figure import Figure as fig
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as figCanvas
 
-# VERSÃO DO APP ----------------------------------------------------------
+# VERSÃO -----------------------------------------------------------------
 version = '0.0.1-proto'
-# Funções ----------------------------------------------------------------
+
+# Local do arquivo de dados ----------------------------------------------
+filePath = 'dados/dados.xlsx'
+# Carregar dados
+try:
+    dados = pd.read_excel(filePath, engine='openpyxl')
+    dados.columns = ['data', 'mm']
+    dados['data'] = pd.to_datetime(dados['data'])
+    dados['dias'] = (dados['data'] - dados['data'].min()).dt.days
+
+    planNome = pd.ExcelFile(filePath).sheet_names
+    planNum = len(planNome)
+    if planNum > 1:
+        multiSheet = True
+
+    fileVer = True
+except:
+    fileVer = False
+    multiSheet = False
+
+
 
 def definirFiltros(tipo):
     def enablerBtFiltrosMm(checkMaior, checkMenor):
@@ -23,6 +43,8 @@ def definirFiltros(tipo):
     janFiltros.minsize(360, 200)
 
     if tipo == 'mm':
+        global checkMaior, checkMenor
+        global entryFiltrosMmMaior, entryFiltrosMmMenor
         checkMaior = tk.IntVar()
         checkMenor = tk.IntVar()
         janFiltros.title('Filtro de milímetros')
@@ -40,28 +62,61 @@ def definirFiltros(tipo):
         checkFiltrosMm2 = tk.Checkbutton(janFiltros, variable=checkMenor, bg='#120702', font=('Arial', 16), command=lambda:enablerBtFiltrosMm(checkMaior, checkMenor))
         checkFiltrosMm2.grid(row=1, column=2, padx=0)
 
-        btFiltrosMm = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, state='disabled', command=lambda:lclMk.filtrarDados('mm'))
+        btFiltrosMm = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, state='disabled', command=lambda:filtrarDados('mm'))
         btFiltrosMm.grid(row=2, column=0, columnspan=3, padx=(200,0), pady=(20,0))
 
+
+def filtrarDados(tipo):
+    global dadosFiltrados, resultado
+
+    if tipo == 'sem':
+        dadosFiltrados = dados
+    elif tipo == 'mm':
+        if checkMaior.get() == 1 and checkMenor.get() == 1:
+            dadosFiltrados = dados[dados['mm'] > float(entryFiltrosMmMaior.get())]
+            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < float(entryFiltrosMmMenor.get())]
+        elif checkMaior.get() == 1:
+            dadosFiltrados = dados[dados['mm'] > float(entryFiltrosMmMaior.get())]
+        else:
+            dadosFiltrados = dados[dados['mm'] < float(entryFiltrosMmMenor.get())]
+
+    resultado = mk.original_test(dadosFiltrados['mm'])
+    telaResultado()
+
+def telaResultado():
+    janResult = tk.Toplevel()
+    janResult.title('Resultado')
+    janResult.geometry('720x540')
+    janResult.configure(bg='#120702')
+    janResult.minsize(720, 540)
+    janResult.state('zoomed')
+
+    #grafico
+    trendX = dadosFiltrados['dias']
+    trendY = resultado.slope * trendX + resultado.intercept
+    graf = fig(figsize=(5, 4), dpi=100)
+    plot = graf.add_subplot(111)
+    plot.plot(dadosFiltrados['data'], dadosFiltrados['mm'], label='Dados', color='black', lw=0.80, marker='o', ms=2, alpha=0.5)
+    plot.plot(dadosFiltrados['data'], trendY, label='Tendência', color='red')
+    plot.legend()
+    plot.grid()
+    plot.set_xlabel('Data')
+    plot.set_ylabel('mm')
+    frameResultL = tk.Frame(janResult, bg='blue')
+    frameResultR = tk.Frame(janResult, bg='green')
+    frameResultL.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+    frameResultR.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+    canvasTend = figCanvas(graf, master=frameResultR)
+    canvasTend.draw()
+    canvasTend.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+
+    # Informações
+    
 
 
 
 # Codigo principal -------------------------------------------------------
 
-
-# carregar dados
-filePath = 'dados/dados.xlsx'
-
-try:
-    planNome = pd.ExcelFile(filePath).sheet_names
-    planNum = len(planNome)
-    if planNum > 1:
-        multiSheet = True
-
-    fileVer = True
-except:
-    fileVer = False
-    multiSheet = False
     
 
 # janela
@@ -93,7 +148,7 @@ if multiSheet:
 # botoes
 txtBotoes = tk.Label(janMenu, text='Filtros:', bg='#120702', fg='#E1F4E3', font=('Arial', 15))
 txtBotoes.pack(side=tk.TOP, pady=(30,0))
-btGeral = tk.Button(janMenu, text='Sem filtros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: definirFiltros('sem'))
+btGeral = tk.Button(janMenu, text='Sem filtros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: filtrarDados('sem'))
 btGeral.pack(side=tk.TOP, pady=(0,5))
 btMm = tk.Button(janMenu, text='Milímetros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: definirFiltros('mm'))
 btMm.pack(side=tk.TOP, pady=(0,5))
