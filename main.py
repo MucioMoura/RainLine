@@ -5,6 +5,7 @@ import pandas as pd
 from matplotlib.figure import Figure as fig
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as figCanvas
 
+
 # VERSÃO -----------------------------------------------------------------
 version = '0.0.1-proto'
 
@@ -12,10 +13,12 @@ version = '0.0.1-proto'
 filePath = 'dados/dados.xlsx'
 # Carregar dados
 try:
+    global dados
     dados = pd.read_excel(filePath, engine='openpyxl')
     dados.columns = ['data', 'mm']
     dados['data'] = pd.to_datetime(dados['data'])
     dados['dias'] = (dados['data'] - dados['data'].min()).dt.days
+    dados['anos'] = dados['data'].dt.year
 
     planNome = pd.ExcelFile(filePath).sheet_names
     planNum = len(planNome)
@@ -27,9 +30,16 @@ except:
     fileVer = False
     multiSheet = False
 
+def escolhaFiltro(tipo):
+    global filtro
+    filtro = tipo
+    if filtro == 'sem':
+        filtrarDados()
+    else:
+        definirFiltros()
 
 
-def definirFiltros(tipo):
+def definirFiltros():
     def enablerBtFiltrosMm(checkMaior, checkMenor):
         if checkMaior.get() == 1 or checkMenor.get() == 1:
             btFiltrosMm.config(state='normal')
@@ -42,7 +52,7 @@ def definirFiltros(tipo):
     janFiltros.maxsize(360, 200)
     janFiltros.minsize(360, 200)
 
-    if tipo == 'mm':
+    if filtro == 'mm':
         global checkMaior, checkMenor
         global entryFiltrosMmMaior, entryFiltrosMmMenor
         checkMaior = tk.IntVar()
@@ -62,16 +72,16 @@ def definirFiltros(tipo):
         checkFiltrosMm2 = tk.Checkbutton(janFiltros, variable=checkMenor, bg='#120702', font=('Arial', 16), command=lambda:enablerBtFiltrosMm(checkMaior, checkMenor))
         checkFiltrosMm2.grid(row=1, column=2, padx=0)
 
-        btFiltrosMm = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, state='disabled', command=lambda:filtrarDados('mm'))
+        btFiltrosMm = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, state='disabled', command=lambda:filtrarDados())
         btFiltrosMm.grid(row=2, column=0, columnspan=3, padx=(200,0), pady=(20,0))
 
 
-def filtrarDados(tipo):
+def filtrarDados():
     global dadosFiltrados, resultado
 
-    if tipo == 'sem':
+    if filtro == 'sem':
         dadosFiltrados = dados
-    elif tipo == 'mm':
+    elif filtro == 'mm':
         if checkMaior.get() == 1 and checkMenor.get() == 1:
             dadosFiltrados = dados[dados['mm'] > float(entryFiltrosMmMaior.get())]
             dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < float(entryFiltrosMmMenor.get())]
@@ -92,7 +102,8 @@ def telaResultado():
     janResult.state('zoomed')
 
     #grafico
-    trendX = dadosFiltrados['dias']
+    dadosFiltrados['t'] = dadosFiltrados['dias'] / 365.25
+    trendX = dadosFiltrados['t']
     trendY = resultado.slope * trendX + resultado.intercept
     graf = fig(figsize=(5, 4), dpi=100)
     plot = graf.add_subplot(111)
@@ -102,8 +113,9 @@ def telaResultado():
     plot.grid()
     plot.set_xlabel('Data')
     plot.set_ylabel('mm')
-    frameResultL = tk.Frame(janResult, bg='blue')
-    frameResultR = tk.Frame(janResult, bg='green')
+
+    frameResultL = tk.Frame(janResult, bg='#120702')
+    frameResultR = tk.Frame(janResult, bg='#120702')
     frameResultL.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
     frameResultR.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
     canvasTend = figCanvas(graf, master=frameResultR)
@@ -111,13 +123,33 @@ def telaResultado():
     canvasTend.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
 
     # Informações
+    txtInfo = tk.Label(frameResultL, text=f'Dados de {dadosFiltrados['anos'].min()} a {dadosFiltrados['anos'].max()}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo.grid(row=0, column=0, padx=(5), pady=(5), sticky='nw')
+    txtInfo2 = tk.Label(frameResultL, text='Filtros:', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo2.grid(row=1, column=0, padx=(5), pady=(5), sticky='nw')
+    txtInfo3 = tk.Label(frameResultL, text='-> Milímetros | Não aplicado.', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo3.grid(row=2, column=0, padx=(5), pady=(5), sticky='nw')
+    txtInfo4 = tk.Label(frameResultL, text='-> Data | Não aplicado.', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo4.grid(row=3, column=0, padx=(5), pady=(5), sticky='nw')
+    
+    if filtro == 'sem':
+        txtInfo3.config(text='-> Milímetros | Não aplicado.')
+        txtInfo4.config(text='-> Data | Não aplicado.')
+        print(f'if de sem ({filtro})')
+    elif filtro == 'mm':
+        if checkMaior.get() == 1 and checkMenor.get() == 1:
+            print(f'if de mm ({filtro})')
+            txtInfo3.config(text=f'-> Milímetros | Maior que {float(entryFiltrosMmMaior.get())} | Menor que {float(entryFiltrosMmMenor.get())}')
+        elif checkMaior.get() == 1:
+            txtInfo3.config(text=f'-> Milímetros | Maior que {float(entryFiltrosMmMaior.get())}')
+        else:
+            txtInfo3.config(text=f'-> Milímetros | Menor que {float(entryFiltrosMmMenor.get())}')
+
+    
     
 
 
-
-# Codigo principal -------------------------------------------------------
-
-    
+# Janela principal -------------------------------------------------------
 
 # janela
 janMenu = tk.Tk()
@@ -148,13 +180,13 @@ if multiSheet:
 # botoes
 txtBotoes = tk.Label(janMenu, text='Filtros:', bg='#120702', fg='#E1F4E3', font=('Arial', 15))
 txtBotoes.pack(side=tk.TOP, pady=(30,0))
-btGeral = tk.Button(janMenu, text='Sem filtros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: filtrarDados('sem'))
+btGeral = tk.Button(janMenu, text='Sem filtros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: escolhaFiltro('sem'))
 btGeral.pack(side=tk.TOP, pady=(0,5))
-btMm = tk.Button(janMenu, text='Milímetros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: definirFiltros('mm'))
+btMm = tk.Button(janMenu, text='Milímetros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: escolhaFiltro('mm'))
 btMm.pack(side=tk.TOP, pady=(0,5))
-btData = tk.Button(janMenu, text='Data', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: definirFiltros('data'))
+btData = tk.Button(janMenu, text='Data', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: escolhaFiltro('data'))
 btData.pack(side=tk.TOP, pady=(0,5))
-btAmbos = tk.Button(janMenu, text='Data e milímetros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: definirFiltros('ambos'))
+btAmbos = tk.Button(janMenu, text='Data e milímetros', bg='#FF6219', fg='#120702', font=('Arial', 20), width=15, height=1, activebackground='#89D28F', border=0, command=lambda: escolhaFiltro('ambos'))
 btAmbos.pack(side=tk.TOP, pady=(0,5))
 
 
