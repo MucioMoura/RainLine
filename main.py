@@ -14,12 +14,8 @@ version = 'v0.0.0-proto'
 filePath = 'dados/dados.xlsx'
 # Carregar dados
 try:
-    global dados
-    dados = pd.read_excel(filePath, engine='openpyxl')
-    dados.columns = ['data', 'mm']
-    dados['data'] = pd.to_datetime(dados['data'])
-    dados['dias'] = (dados['data'] - dados['data'].min()).dt.days
-    dados['anos'] = dados['data'].dt.year
+    global multiSheet
+    teste = pd.ExcelFile(filePath, engine='openpyxl')
 
     planNome = pd.ExcelFile(filePath).sheet_names
     planNum = len(planNome)
@@ -27,11 +23,22 @@ try:
         multiSheet = True
 
     fileVer = True
+    teste = None
 except:
     fileVer = False
     multiSheet = False
 
 def escolhaFiltro(tipo):
+    global dados
+    if multiSheet:
+        dados = pd.read_excel(filePath, sheet_name=planSelected.get(), engine='openpyxl')
+    else:
+        dados = pd.read_excel(filePath, engine='openpyxl')
+    dados.columns = ['data', 'mm']
+    dados['data'] = pd.to_datetime(dados['data'])
+    dados['dias'] = (dados['data'] - dados['data'].min()).dt.days
+    dados['anos'] = dados['data'].dt.year
+
     filtro = tipo
     if filtro == 'sem':
         filtrarDados(filtro)
@@ -40,17 +47,6 @@ def escolhaFiltro(tipo):
 
 
 def definirFiltros(filtro):
-    def enablerBtFiltrosMm(checkMaior, checkMenor):
-        if checkMaior.get() == 1 or checkMenor.get() == 1:
-            btFiltrosMm.config(state='normal')
-        else:
-            btFiltrosMm.config(state='disabled')
-
-    def enablerBtFiltrosAmbos(checkMaior, checkMenor):
-        if checkMaior.get() == 1 or checkMenor.get() == 1:
-            btFiltrosAmbos.config(state='normal')
-        else:
-            btFiltrosAmbos.config(state='disabled')
 
     global janFiltros
     janFiltros = tk.Toplevel()
@@ -60,33 +56,26 @@ def definirFiltros(filtro):
     janFiltros.minsize(360, 220)
 
     if filtro == 'mm':
-        global checkMaior, checkMenor
         global entryFiltrosMmMaior, entryFiltrosMmMenor
 
-        checkMaior = tk.IntVar()
-        checkMenor = tk.IntVar()
         janFiltros.title('Filtro de milímetros')
         mmMax = dados['mm'].max()
         mmMin = dados['mm'].min()
 
-        txtFiltrosMm = tk.Label(janFiltros, text='Maior que ', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
+        txtFiltrosMm = tk.Label(janFiltros, text='De ', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
         txtFiltrosMm.grid(row=0, column=0, padx=(40,0), pady=(40,0))
         entryFiltrosMmMaior = tk.Entry(janFiltros, bg='#EFF9F0', fg='#120702', font=('Arial', 16), width=5)
         entryFiltrosMmMaior.grid(row=0, column=1, padx=0, pady=(40,0))
-        checkFiltrosMm = tk.Checkbutton(janFiltros, variable=checkMaior, bg='#120702', font=('Arial', 16), command=lambda:enablerBtFiltrosMm(checkMaior, checkMenor))
-        checkFiltrosMm.grid(row=0, column=2, padx=0, pady=(40,0))
         
-        txtFiltrosMm2 = tk.Label(janFiltros, text='Menor que ', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
+        txtFiltrosMm2 = tk.Label(janFiltros, text='Até ', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
         txtFiltrosMm2.grid(row=1, column=0, padx=(40,0))
         entryFiltrosMmMenor = tk.Entry(janFiltros, bg='#EFF9F0', fg='#120702', font=('Arial', 16), width=5)
         entryFiltrosMmMenor.grid(row=1, column=1, padx=0)
-        checkFiltrosMm2 = tk.Checkbutton(janFiltros, variable=checkMenor, bg='#120702', font=('Arial', 16), command=lambda:enablerBtFiltrosMm(checkMaior, checkMenor))
-        checkFiltrosMm2.grid(row=1, column=2, padx=0)
 
         txtFiltrosMm3 = tk.Label(janFiltros, text=f'Valores entre {mmMin} e {mmMax}', bg='#120702', fg='#E1F4E3', font=('Arial', 8, 'italic underline'))
         txtFiltrosMm3.grid(row=2, column=0, padx=(80,0), pady=(0,0))
 
-        btFiltrosMm = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, state='disabled', command=lambda:filtrarDados(filtro))
+        btFiltrosMm = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, command=lambda:filtrarDados(filtro))
         btFiltrosMm.grid(row=3, column=0, columnspan=3, padx=(200,0), pady=(20,0))
     elif filtro == 'data':
         global entryFiltrosDataIni, entryFiltrosDataFim
@@ -111,7 +100,38 @@ def definirFiltros(filtro):
         btFiltrosData = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, command=lambda:filtrarDados(filtro))
         btFiltrosData.grid(row=3, column=0, columnspan=3, padx=(200,0), pady=(20,0))
     elif filtro == 'ambos':
+        def continuarAmbos(entryFiltrosDataIni, entryFiltrosDataFim):
+            dataIni = entryFiltrosDataIni.get()
+            dataFim = entryFiltrosDataFim.get()
+            if dataIni == '' and dataFim == '':
+                mb.showerror('Nenhum filtro aplicado!', message='Insira pelo menos um filtro.\nPara utilização sem filtros, clique no botão "Sem filtros" no menu principal.')
+                return
+            elif dataIni == '':
+                aux = dados[dados['data'].dt.year <= int(dataFim)]
+            elif dataFim == '':
+                aux = dados[dados['data'].dt.year >= int(dataIni)]
+            else:
+                if dataIni > dataFim:
+                    mb.showerror('Erro!', message='Ano inicial maior que ano final.')
+                    return
+                aux = dados[dados['data'].dt.year >= int(dataIni)]
+                aux = aux[aux['data'].dt.year <= int(dataFim)]
+
+            mmMax = aux['mm'].max()
+            mmMin = aux['mm'].min()
+            aux = None
+            txtFiltrosMm.config(fg='#E1F4E3')
+            entryFiltrosMmMaior.config(state='normal')
+            txtFiltrosMm2.config(fg='#E1F4E3')
+            entryFiltrosMmMenor.config(state='normal')
+            txtFiltrosMm3.config(text=f'Valores entre {mmMin} e {mmMax}', fg='#E1F4E3')
+            btFiltrosMm.config(state='normal')
+
+
         janFiltros.title('Filtro de data e milímetros')
+        janFiltros.geometry('360x360')
+        janFiltros.maxsize(360, 360)
+        janFiltros.minsize(360, 360)
         anosMax = dados['anos'].max()
         anosMin = dados['anos'].min()
 
@@ -128,41 +148,109 @@ def definirFiltros(filtro):
         txtFiltrosData3 = tk.Label(janFiltros, text=f'Valores entre {anosMin} e {anosMax}', bg='#120702', fg='#E1F4E3', font=('Arial', 8, 'italic underline'))
         txtFiltrosData3.grid(row=2, column=0, padx=(80,0), pady=(0,0))
 
-        btFiltrosData = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, command=lambda:filtrarDados(filtro))
+        btFiltrosData = tk.Button(janFiltros, text='Continuar...', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, command=lambda:continuarAmbos(entryFiltrosDataIni, entryFiltrosDataFim))
         btFiltrosData.grid(row=3, column=0, columnspan=3, padx=(200,0), pady=(20,0))
 
-        
-        
+        ###
 
+        txtFiltrosMm = tk.Label(janFiltros, text='De ', bg='#120702', fg='#6d6d6d', font=('Arial', 16))
+        txtFiltrosMm.grid(row=4, column=0, padx=(40,0), pady=(10,0))
+        entryFiltrosMmMaior = tk.Entry(janFiltros, bg='#EFF9F0', fg='#120702', font=('Arial', 16), width=5, state='disabled')
+        entryFiltrosMmMaior.grid(row=4, column=1, padx=0, pady=(10,0))
+        
+        txtFiltrosMm2 = tk.Label(janFiltros, text='Até ', bg='#120702', fg='#6d6d6d', font=('Arial', 16))
+        txtFiltrosMm2.grid(row=5, column=0, padx=(40,0))
+        entryFiltrosMmMenor = tk.Entry(janFiltros, bg='#EFF9F0', fg='#120702', font=('Arial', 16), width=5, state='disabled')
+        entryFiltrosMmMenor.grid(row=5, column=1, padx=0)
+
+        txtFiltrosMm3 = tk.Label(janFiltros, text=f'Aguardando...', bg='#120702', fg='#6d6d6d', font=('Arial', 8, 'italic underline'))
+        txtFiltrosMm3.grid(row=6, column=0, padx=(80,0), pady=(0,0))
+
+        btFiltrosMm = tk.Button(janFiltros, text='Aplicar', bg='#FF6219', fg='#120702', font=('Arial', 16), width=10, height=1, activebackground='#89D28F', border=0, command=lambda:filtrarDados(filtro), state='disabled')
+        btFiltrosMm.grid(row=7, column=0, columnspan=3, padx=(200,0), pady=(20,0))
 
 
 def filtrarDados(filtro):
     global dadosFiltrados, resultado
 
-    if filtro == 'sem':
+    if filtro == 'sem': ######################################################
         dadosFiltrados = dados
-    elif filtro == 'mm':
-        if checkMaior.get() == 1 and checkMenor.get() == 1:
-            dadosFiltrados = dados[dados['mm'] > float(entryFiltrosMmMaior.get())]
-            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < float(entryFiltrosMmMenor.get())]
-        elif checkMaior.get() == 1:
-            dadosFiltrados = dados[dados['mm'] > float(entryFiltrosMmMaior.get())]
+    elif filtro == 'mm': ######################################################
+        mmMaior = entryFiltrosMmMaior.get()
+        mmMenor = entryFiltrosMmMenor.get()
+        if mmMaior == '' and mmMenor == '':
+            mb.showerror('Nenhum filtro aplicado!', message='Insira pelo menos um filtro.\nPara utilização sem filtros, clique no botão "Sem filtros" no menu principal.')
+            janFiltros.destroy()
+            return
+        elif mmMenor == '':
+            dadosFiltrados = dados[dados['mm'] > float(mmMaior)]
+        elif mmMaior == '':
+            dadosFiltrados = dados[dados['mm'] < float(mmMenor)]
         else:
-            dadosFiltrados = dados[dados['mm'] < float(entryFiltrosMmMenor.get())]
-    elif filtro == 'data':
+            if float(mmMaior) > float(mmMenor):
+                mb.showerror('Erro!', message='Valor inicial é maior que o valor final.')
+                janFiltros.destroy()
+                return
+            dadosFiltrados = dados[dados['mm'] > float(mmMaior)]
+            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < float(mmMenor)]
+    elif filtro == 'data': ######################################################
         dataIni = entryFiltrosDataIni.get()
         dataFim = entryFiltrosDataFim.get()
         if dataIni == '' and dataFim == '':
-            definirFiltros()
-        elif dataFim == '':
-            dadosFiltrados = dados[dados['data'].dt.year >= int(dataIni)]
+            mb.showerror('Nenhum filtro aplicado!', message='Insira pelo menos um filtro.\nPara utilização sem filtros, clique no botão "Sem filtros" no menu principal.')
+            janFiltros.destroy()
+            return
         elif dataIni == '':
             dadosFiltrados = dados[dados['data'].dt.year <= int(dataFim)]
+        elif dataFim == '':
+            dadosFiltrados = dados[dados['data'].dt.year >= int(dataIni)]
         else:
+            if dataIni > dataFim:
+                mb.showerror('Erro!', message='Ano inicial maior que ano final.')
+                janFiltros.destroy()
+                return
+            dadosFiltrados = dados[dados['data'].dt.year >= int(dataIni)]
+            dadosFiltrados = dadosFiltrados[dadosFiltrados['data'].dt.year <= int(dataFim)]
+    elif filtro == 'ambos': ######################################################
+        dataIni = entryFiltrosDataIni.get()
+        dataFim = entryFiltrosDataFim.get()
+        mmMaior = entryFiltrosMmMaior.get()
+        mmMenor = entryFiltrosMmMenor.get()
+        if mmMaior == '' and mmMenor == '':
+            mb.showerror('Nenhum filtro aplicado!', message='Insira pelo menos um filtro.\nPara utilização sem filtros, clique no botão "Sem filtros" no menu principal.')
+            janFiltros.destroy()
+            return
+        
+        if dataIni == '':
+            print('-- 1 --')
+            dadosFiltrados = dados[dados['data'].dt.year <= int(dataFim)]
+        elif dataFim == '':
+            print('-- 2 --')
+            dadosFiltrados = dados[dados['data'].dt.year >= int(dataIni)]
+        else:
+            print('-- 3 --')
+            if dataIni > dataFim:
+                mb.showerror('Erro!', message='Ano inicial maior que ano final.')
+                janFiltros.destroy()
+                return
             dadosFiltrados = dados[dados['data'].dt.year >= int(dataIni)]
             dadosFiltrados = dadosFiltrados[dadosFiltrados['data'].dt.year <= int(dataFim)]
 
-
+        if mmMaior == '' and mmMenor == '':
+            mb.showerror('Nenhum filtro aplicado!', message='Insira pelo menos um filtro.\nPara utilização sem filtros, clique no botão "Sem filtros" no menu principal.')
+            janFiltros.destroy()
+            return
+        elif mmMenor == '':
+            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] > float(mmMaior)]
+        elif mmMaior == '':
+            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < float(mmMenor)]
+        else:
+            if float(mmMaior) > float(mmMenor):
+                mb.showerror('Erro!', message='Valor inicial é maior que o valor final.')
+                janFiltros.destroy()
+                return
+            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] > float(mmMaior)]
+            dadosFiltrados = dadosFiltrados[dadosFiltrados['mm'] < float(mmMenor)]
             
 
     resultado = mk.original_test(dadosFiltrados['mm'])
@@ -199,13 +287,13 @@ def telaResultado(filtro):
 
     # Informações
     try:
-        MmMaior = float(entryFiltrosMmMaior.get())
+        mmMaior = float(entryFiltrosMmMaior.get())
     except:
-        MmMaior = 0
+        mmMaior = 0
     try:
-        MmMenor = float(entryFiltrosMmMenor.get())
+        mmMenor = float(entryFiltrosMmMenor.get())
     except:
-        MmMenor = 0
+        mmMenor = 0
     anosMax = dadosFiltrados['anos'].max()
     anosMin = dadosFiltrados['anos'].min()
     mmMax = dadosFiltrados['mm'].max()
@@ -225,12 +313,39 @@ def telaResultado(filtro):
         txtInfo3.config(text='-> Milímetros | Não aplicado.')
         txtInfo4.config(text='-> Data | Não aplicado.')
     elif filtro == 'mm':
-        if checkMaior.get() == 1 and checkMenor.get() == 1:
-            txtInfo3.config(text=f'-> Milímetros | Maior que {MmMaior} | Menor que {MmMenor}')
-        elif checkMaior.get() == 1:
-            txtInfo3.config(text=f'-> Milímetros | Maior que {MmMaior}')
+        if mmMaior != 0 and mmMenor != 0:
+            txtInfo3.config(text=f'-> Milímetros | De {mmMaior} até {mmMenor}')
+        elif mmMaior != 0:
+            txtInfo3.config(text=f'-> Milímetros | A partir de {mmMaior}')
         else:
-            txtInfo3.config(text=f'-> Milímetros | Menor que {MmMenor}')
+            txtInfo3.config(text=f'-> Milímetros | Até {mmMenor}')
+    elif filtro == 'data':
+        dataIni = entryFiltrosDataIni.get()
+        dataFim = entryFiltrosDataFim.get()
+
+        if dataIni != '' and dataFim != '':
+            txtInfo4.config(text=f'-> Data | De {dataIni} a {dataFim}')
+        elif dataIni != '':
+            txtInfo4.config(text=f'-> Data | A partir de {dataIni}')
+        else:
+            txtInfo4.config(text=f'-> Data | Até {dataFim}')
+    elif filtro == 'ambos':
+        if mmMaior != 0 and mmMenor != 0:
+            txtInfo3.config(text=f'-> Milímetros | De {mmMaior} até {mmMenor}')
+        elif mmMaior != 0:
+            txtInfo3.config(text=f'-> Milímetros | A partir de {mmMaior}')
+        else:
+            txtInfo3.config(text=f'-> Milímetros | Até {mmMenor}')
+
+        dataIni = entryFiltrosDataIni.get()
+        dataFim = entryFiltrosDataFim.get()
+
+        if dataIni != '' and dataFim != '':
+            txtInfo4.config(text=f'-> Data | De {dataIni} a {dataFim}')
+        elif dataIni != '':
+            txtInfo4.config(text=f'-> Data | A partir de {dataIni}')
+        else:
+            txtInfo4.config(text=f'-> Data | Até {dataFim}')
 
     txtInfo5 = tk.Label(frameResultL, text=f'Maior mm = {mmMax}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
     txtInfo5.grid(row=4, column=0, padx=(5), pady=(8,0), sticky='nw')
@@ -273,7 +388,10 @@ def telaResultado(filtro):
     txtInfo18 = tk.Label(frameResultL, text=f'Intercept = {resultado.intercept}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
     txtInfo18.grid(row=20, column=0, padx=(5), pady=(0,0), sticky='sw')
 
-    janFiltros.destroy()
+    if filtro != 'sem':
+        janFiltros.destroy()
+
+
 # Janela principal -------------------------------------------------------
 
 # janela
@@ -293,14 +411,15 @@ txtTop.pack(pady=(20))
 
 # selecao de planilha
 if multiSheet:
+    global planSelected
     txtMultiSheet = tk.Label(janMenu, text='Foi identificado mais de uma planilha.\nSelecione a planilha desejada:', bg='#120702', fg='#E1F4E3', font=('Arial', 12))
     txtMultiSheet.pack(side=tk.TOP, pady=(0,0))
-    planOptions = tk.OptionMenu(janMenu, tk.StringVar(), *planNome)
+    planSelected = tk.StringVar()
+    planSelected.set(planNome[0])
+    planOptions = tk.OptionMenu(janMenu, planSelected, *planNome)
     planOptions.config(bg='#EFF9F0', fg='#120702', font=('Arial', 10), width=20, height=1, activebackground='#89D28F', border=0)
     planOptions.pack(side=tk.TOP, pady=(0,5))
-    planSelected = planOptions.cget('textvariable')
 
-# PY_VAR0 caso nenhuma planilha seja selecionada
 
 # botoes
 txtBotoes = tk.Label(janMenu, text='Filtros:', bg='#120702', fg='#E1F4E3', font=('Arial', 15))
