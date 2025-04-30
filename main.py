@@ -396,7 +396,7 @@ def telaResultado(filtro):
 
 # janela
 janMenu = tk.Tk()
-janMenu.title('Calculadora de Precipitação | por Múcio Moura | ' + version)
+janMenu.title('RainLine | por Múcio Moura | ' + version)
 janMenu.geometry('720x540')
 janMenu.configure(bg='#120702')
 janMenu.minsize(720, 540)
@@ -405,8 +405,10 @@ janMenu.minsize(720, 540)
 # top
 frameTop = tk.Frame(janMenu, bg='#250E04')
 frameTop.pack(side=tk.TOP, fill=tk.X)
-txtTop = tk.Label(frameTop, text='Calculadora de Precipitação', bg='#250E04', fg='#E1F4E3', font=('Arial', 30, 'bold'))
-txtTop.pack(pady=(20))
+txtTop = tk.Label(frameTop, text='RainLine', bg='#250E04', fg='#E1F4E3', font=('Arial', 40, 'bold'))
+txtTop.pack(pady=(20,0))
+txtTop2 = tk.Label(frameTop, text='Calculadora de tendência de precipitação', bg='#250E04', fg='#E1F4E3', font=('Arial', 15))
+txtTop2.pack(pady=(0,20))
 
 
 # selecao de planilha
