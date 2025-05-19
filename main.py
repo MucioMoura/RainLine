@@ -8,7 +8,7 @@ import matplotlib.dates as mdates
 
 
 # VERSÃO -----------------------------------------------------------------
-version = 'v0.0.0-proto'
+version = 'v0.0.1-proto'
 
 # Local do arquivo de dados ----------------------------------------------
 filePath = 'dados/dados.xlsx'
@@ -270,7 +270,7 @@ def telaResultado(filtro):
     trendY = resultado.slope * trendX + resultado.intercept
     graf = fig(figsize=(10, 6), dpi=100)
     plot = graf.add_subplot(111)
-    plot.plot(dadosFiltrados['data'], dadosFiltrados['mm'], label='Dados', color='blue', lw=0.80, marker='o', ms=2, alpha=0.5)
+    plot.plot(dadosFiltrados['data'], dadosFiltrados['mm'], label='Dados', color='blue', lw=0, marker='.', ms=6, alpha=0.5)
     plot.plot(dadosFiltrados['data'], trendY, label='Tendência', color='red')
     plot.legend()
     plot.grid()
@@ -300,13 +300,13 @@ def telaResultado(filtro):
     mmMin = dadosFiltrados['mm'].min()
     qtdDados = len(dadosFiltrados['mm'])
 
-    txtInfo = tk.Label(frameResultL, text=f'Dados de {anosMin} a {anosMax}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo = tk.Label(frameResultL, text=f'Dados de {anosMin} a {anosMax}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo.grid(row=0, column=0, padx=(5), pady=(8), sticky='nw')
-    txtInfo2 = tk.Label(frameResultL, text='Filtros:', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo2 = tk.Label(frameResultL, text='Filtros:', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo2.grid(row=1, column=0, padx=(5), pady=(8,0), sticky='nw')
-    txtInfo3 = tk.Label(frameResultL, text='-> Milímetros | Não aplicado.', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo3 = tk.Label(frameResultL, text='-> Milímetros | Não aplicado.', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo3.grid(row=2, column=0, padx=(5), pady=(0), sticky='nw')
-    txtInfo4 = tk.Label(frameResultL, text='-> Data | Não aplicado.', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo4 = tk.Label(frameResultL, text='-> Data | Não aplicado.', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo4.grid(row=3, column=0, padx=(5), pady=(0,8), sticky='nw')
     
     if filtro == 'sem':
@@ -347,22 +347,22 @@ def telaResultado(filtro):
         else:
             txtInfo4.config(text=f'-> Data | Até {dataFim}')
 
-    txtInfo5 = tk.Label(frameResultL, text=f'Maior mm = {mmMax}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo5 = tk.Label(frameResultL, text=f'Maior mm = {mmMax}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo5.grid(row=4, column=0, padx=(5), pady=(8,0), sticky='nw')
-    txtInfo6 = tk.Label(frameResultL, text=f'Menor mm = {mmMin}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo6 = tk.Label(frameResultL, text=f'Menor mm = {mmMin}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo6.grid(row=5, column=0, padx=(5), pady=(0,8), sticky='nw')
-    txtInfo7 = tk.Label(frameResultL, text=f'Quantidade de dados = {qtdDados}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
-    txtInfo7.grid(row=6, column=0, padx=(5), pady=(8,100), sticky='nw')
+    txtInfo7 = tk.Label(frameResultL, text=f'Quantidade de dados = {qtdDados}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
+    txtInfo7.grid(row=6, column=0, padx=(5), pady=(8,25), sticky='nw')
 
-    txtInfo8 = tk.Label(frameResultL, text='Resultado do Mann Kendall:', bg='#120702', fg='#E1F4E3', font=('Arial', 24, 'underline'))
-    txtInfo8.grid(row=10, column=0, padx=(5), pady=(100,0), sticky='sw')
-    txtInfo9 = tk.Label(frameResultL, text='h = ', bg='#120702', fg='#E1F4E3', font=('Arial', 20, 'bold'))
+    txtInfo8 = tk.Label(frameResultL, text='Resultado do Mann Kendall:', bg='#120702', fg='#E1F4E3', font=('Arial', 20, 'underline'))
+    txtInfo8.grid(row=10, column=0, padx=(5), pady=(25,0), sticky='sw')
+    txtInfo9 = tk.Label(frameResultL, text='h = ', bg='#120702', fg='#E1F4E3', font=('Arial', 16, 'bold'))
     txtInfo9.grid(row=11, column=0, padx=(5), pady=(0,0), sticky='sw')
     if resultado.h == True:
         txtInfo9.config(text='h = 1 (Existe tendência significativa)')
     else:
         txtInfo9.config(text='h = 0 (NÃO existe tendência significativa)')
-    txtInfo10 = tk.Label(frameResultL, text='Trend = ', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo10 = tk.Label(frameResultL, text='Trend = ', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo10.grid(row=12, column=0, padx=(5), pady=(0,0), sticky='sw')
     if resultado.trend == 'increasing':
         txtInfo10.config(text='Tendência = Crescente')
@@ -370,22 +370,22 @@ def telaResultado(filtro):
         txtInfo10.config(text='Tendência = Decrescente')
     else:
         txtInfo10.config(text='Tendência = Nenhum')
-    txtInfo11 = tk.Label(frameResultL, text=f'p = {resultado.p}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo11 = tk.Label(frameResultL, text=f'p = {resultado.p}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo11.grid(row=13, column=0, padx=(5), pady=(0,0), sticky='sw')
     significancia = round(100 - (resultado.p * 100), 2)
-    txtInfo12 = tk.Label(frameResultL, text=f'Nível de significância (p) = {significancia}%', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo12 = tk.Label(frameResultL, text=f'Nível de significância (p) = {significancia}%', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo12.grid(row=14, column=0, padx=(5), pady=(0,0), sticky='sw')
-    txtInfo13 = tk.Label(frameResultL, text=f'z = {resultado.z}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo13 = tk.Label(frameResultL, text=f'z = {resultado.z}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo13.grid(row=15, column=0, padx=(5), pady=(0,0), sticky='sw')
-    txtInfo14 = tk.Label(frameResultL, text=f'Tau = {resultado.Tau}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo14 = tk.Label(frameResultL, text=f'Tau = {resultado.Tau}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo14.grid(row=16, column=0, padx=(5), pady=(0,0), sticky='sw')
-    txtInfo15 = tk.Label(frameResultL, text=f's = {resultado.s}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo15 = tk.Label(frameResultL, text=f's = {resultado.s}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo15.grid(row=17, column=0, padx=(5), pady=(0,0), sticky='sw')
-    txtInfo16 = tk.Label(frameResultL, text=f'Var s = {resultado.var_s}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo16 = tk.Label(frameResultL, text=f'Var s = {resultado.var_s}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo16.grid(row=18, column=0, padx=(5), pady=(0,0), sticky='sw')
-    txtInfo17 = tk.Label(frameResultL, text=f'Slope = {resultado.slope}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo17 = tk.Label(frameResultL, text=f'Slope = {resultado.slope}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo17.grid(row=19, column=0, padx=(5), pady=(0,0), sticky='sw')
-    txtInfo18 = tk.Label(frameResultL, text=f'Intercept = {resultado.intercept}', bg='#120702', fg='#E1F4E3', font=('Arial', 20))
+    txtInfo18 = tk.Label(frameResultL, text=f'Intercept = {resultado.intercept}', bg='#120702', fg='#E1F4E3', font=('Arial', 16))
     txtInfo18.grid(row=20, column=0, padx=(5), pady=(0,0), sticky='sw')
 
     if filtro != 'sem':
