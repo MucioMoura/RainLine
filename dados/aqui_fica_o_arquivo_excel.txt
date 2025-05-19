@@ -1,0 +1,3 @@
+O arquivo .xlsx deve ter o nome "dados" e ser colocado na pasta de mesmo nome "dados".
+O arquivo .xlsx contendo os dados deve ser organizado apenas em duas colunas, a primeira sendo as datas e a segundo sendo os milímetors de precipitação. Sempre separando a primeira linha para o titulo de cada coluna.
+Os dados devem estar organizados por data crescente. (É possivel organizar diretamente pelo próprio excel)
